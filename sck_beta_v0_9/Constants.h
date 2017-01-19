@@ -4,19 +4,20 @@
   Defines ATMEGA32U4 pins and other SENSORS and COMUNICATIONS static parameters.
 
 */
+//#include <avr/pgmspace.h>
 
 #define debugEnabled   true
 #define decouplerComp   true   //Only for version Goteo 1.0
 
-#if F_CPU == 8000000 
-    #define FirmWare  "1.1-0.9.4"
+#if F_CPU == 8000000
+#define FirmWare  "1.1-0.9.4"
 #else
-    #define FirmWare  "1.0-0.9.4"
+#define FirmWare  "1.0-0.9.4"
 #endif
 
-/* 
+/*
 
-WIFI AND SERVER STATICS - WiFly, Http server parameters.
+  WIFI AND SERVER STATICS - WiFly, Http server parameters.
 
 */
 // WiFly Auth Modes
@@ -30,23 +31,19 @@ WIFI AND SERVER STATICS - WiFly, Http server parameters.
 #define EXT_ANT "1" // External Antenna
 #define INT_ANT "0" // Internal Antenna
 
-/* 
+/*
 
-WIFLY Firmware Setting
+  WIFLY Firmware Setting
 
 */
 
-#define networks 0
+#define networks 2
 #if (networks > 0)
-static char* mySSID[networks]      = { 
-  "SSID1"        , "SSID2"     };
-static char* myPassword[networks]  = { 
-  "PASS1"      , "PASS2"          };
-static char* wifiEncript[networks] = { 
-  WPA2         , WPA2                };
-static char* antennaExt[networks]  = { 
-  INT_ANT      , INT_ANT             };
-#endif      
+static char* mySSID[networks]      = {(char *)"Livebox-99F6", (char *)"SmartCitizenKit"};
+static char* myPassword[networks]  = {(char *)"bethechange", (char *)"WlanForSCK12345"};
+static char* wifiEncript[networks] = {(char *) WPA2        , (char *) WPA2            };
+static char* antennaExt[networks]  = {(char *) INT_ANT     , (char *) INT_ANT         };
+#endif
 
 #define TWI_FREQ 400000L //Frecuencia bus I2C
 
@@ -54,9 +51,9 @@ static char* antennaExt[networks]  = {
 #define DEFAULT_WIFLY_FIRMWARE "ftp update wifly3-475.img"
 #define DEFAULT_WIFLY_FTP_UPDATE "set ftp address 198.175.253.161"
 
-/* 
+/*
 
-ARDUINO ports definitions - GPIOS and ADCs 
+  ARDUINO ports definitions - GPIOS and ADCs
 
 */
 
@@ -79,9 +76,9 @@ ARDUINO ports definitions - GPIOS and ADCs
 #define S5 A1         //LDR
 
 
-/* 
+/*
 
-SENSOR READINGS - Defaults
+  SENSOR READINGS - Defaults
 
 */
 
@@ -92,43 +89,43 @@ SENSOR READINGS - Defaults
 #define POST_MAX             20     //Max number of postings at a time
 #define DEFAULT_MODE_SENSOR  NORMAL     //Type sensors capture (OFFLINE, NOWIFI, NORMAL, ECONOMIC)
 
-/* 
+/*
 
-i2c ADDRESSES 
+  i2c ADDRESSES
 
 */
 #define RTC_ADDRESS          0x68    // Direction of the RTC
 #define E2PROM               0x50    // Direction of the EEPROM
 
-#if F_CPU == 8000000 
-  #define MCP1               0x2E    // Direction of the mcp1 Potenciometers that control the MICS
-  #define MCP2               0x2F    // Direction of the mcp2 Potenciometers that control the microfone pickup
-  #define bh1730             0x29    // Direction of the light sensor
-  #define Temperature        0x40    // Direction of the sht21    
-  #define ADXL 0x53    //ADXL345 device address
+#if F_CPU == 8000000
+#define MCP1               0x2E    // Direction of the mcp1 Potenciometers that control the MICS
+#define MCP2               0x2F    // Direction of the mcp2 Potenciometers that control the microfone pickup
+#define bh1730             0x29    // Direction of the light sensor
+#define Temperature        0x40    // Direction of the sht21    
+#define ADXL 0x53    //ADXL345 device address
 #else
-  #define MCP1               0x2F    // Direction of the mcp1 MICS
-  #define MCP2               0x2E    // Direction of the mcp2 REGULATORS
+#define MCP1               0x2F    // Direction of the mcp1 MICS
+#define MCP2               0x2E    // Direction of the mcp2 REGULATORS
 #endif
 
-#if F_CPU == 8000000 
-  #define R1  12    //Kohm
+#if F_CPU == 8000000
+#define R1  12    //Kohm
 #else
-  #define R1  82    //Kohm
+#define R1  82    //Kohm
 #endif
 
 #define P1  100   //Kohm 
 
 
-/* 
+/*
 
-Internal EEPROM Memory Addresses
+  Internal EEPROM Memory Addresses
 
-*/ 
+*/
 
 #define MAX_MEMORY                                  571 //Memory size
 
-// SCK Configuration Parameters 
+// SCK Configuration Parameters
 #define EE_ADDR_TIME_VERSION                        0   //32BYTES 
 #define EE_ADDR_TIME_UPDATE                         32  //4BYTES Time between update and update of the sensors in seconds
 #define EE_ADDR_SENSOR_MODE                         36  //4BYTES Type sensors capture
@@ -146,19 +143,19 @@ Internal EEPROM Memory Addresses
 #define DEFAULT_ADDR_ANTENNA                             630  //160 BYTES
 
 
-/* 
+/*
 
-External EEPROM Memory Addresses
+  External EEPROM Memory Addresses
 
-*/ 
+*/
 
 // SCK DATA SPACE (Sensor readings can be stored here to do batch updates)
 #define DEFAULT_ADDR_MEASURES                            0
 
 
-/* 
+/*
 
-MICS PARAMETERS - Gas Sensor Addresses and Defaults
+  MICS PARAMETERS - Gas Sensor Addresses and Defaults
 
 */
 
@@ -170,36 +167,36 @@ MICS PARAMETERS - Gas Sensor Addresses and Defaults
 
 #define  Rc0  10.       //Ohm.  Average current resistance for sensor MICS_5525/MICS_5524
 
-#if F_CPU == 8000000 
-  #define  Rc1  39.     //Ohm.  Average current resistance for sensor MICS_2714
+#if F_CPU == 8000000
+#define  Rc1  39.     //Ohm.  Average current resistance for sensor MICS_2714
 #else
-  #define  Rc1  10.     //Ohm.  Average current resistance for sensor MICS_2710
+#define  Rc1  10.     //Ohm.  Average current resistance for sensor MICS_2710
 #endif
 
-#if F_CPU == 8000000 
-  #define  VMIC0 2734.
-  #define  VMIC1 2734.
+#if F_CPU == 8000000
+#define  VMIC0 2734.
+#define  VMIC1 2734.
 #else
-  #define  VMIC0 5000.
-  #define  VMIC1 2500.
+#define  VMIC0 5000.
+#define  VMIC1 2500.
 #endif
 
 #define reference 2560.
 #define second 1000
 #define minute 60000
 
-/* 
+/*
 
-BATTERY PARAMETERS - Battery sensing calibration parameters
+  BATTERY PARAMETERS - Battery sensing calibration parameters
 
 */
 
-#if F_CPU == 8000000 
-  #define  VAL_MAX_BATTERY                             4200
-  #define  VAL_MIN_BATTERY                             3000
+#if F_CPU == 8000000
+#define  VAL_MAX_BATTERY                             4200
+#define  VAL_MIN_BATTERY                             3000
 #else
-  #define  VAL_MAX_BATTERY                             4050
-  #define  VAL_MIN_BATTERY                             3000
+#define  VAL_MAX_BATTERY                             4050
+#define  VAL_MIN_BATTERY                             3000
 #endif
 
 
@@ -215,70 +212,79 @@ BATTERY PARAMETERS - Battery sensing calibration parameters
 #define buffer_length        32
 static char buffer[buffer_length];
 
-// Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add 
-static char* WEB[8]={
-                  "data.smartcitizen.me",
-                  "PUT /add HTTP/1.1\n", 
-                  "Host: data.smartcitizen.me \n", 
-                  "User-Agent: SmartCitizen \n", 
-                  "X-SmartCitizenMacADDR: ", 
-                  "X-SmartCitizenApiKey: ", 
-                  "X-SmartCitizenVersion: ",  
-                  "X-SmartCitizenData: "};
-  
-// Time server request -  EndPoint: http://data.smartcitizen.me/datetime                 
-static char* WEBTIME[3]={                  
-                  /*Servidor de tiempo*/
-                  "GET /datetime HTTP/1.1\n",
-                  "Host: data.smartcitizen.me \n",
-                  "User-Agent: SmartCitizen \n\n"  
-                  };
+#define nb_host 2
+static char* HOSTADDR[nb_host] = {"data.smartcitizen.me", "192.168.1.29" }; //"dev.communecter.org",
+//space after endpoint and timeendpoint
+static char* ENDPTHTTP[nb_host] = {"/add", "/ph/communecter/element/save"};
 
-// Data JSON structure                  
-static char* SERVER[11]={
-                  "{\"temp\":\"",
-                  "\",\"hum\":\"", 
-                  "\",\"light\":\"",
-                  "\",\"bat\":\"",
-                  "\",\"panel\":\"",
-                  "\",\"co\":\"", 
-                  "\",\"no2\":\"", 
-                  "\",\"noise\":\"", 
-                  "\",\"nets\":\"", 
-                  "\",\"timestamp\":\"", 
-                  "\"}"
-                  };
-                  
-static char* SENSOR[10]={
-                  "Temperature: ",
-                  "Humidity: ",
-                  "Light: ",
-                  "Battery: ",
-                  "Solar Panel: ",
-                  "Carbon Monxide: ",
-                  "Nitrogen Dioxide: ",
-                  "Noise: ",
-                  "Wifi Spots: ",
-                  "UTC: " 
-                };
+static char* TIMEENDPOINT[nb_host] = {"/datetime", "/ph/api/tool/datetime"};
 
-static char* UNITS[9]={
-                  #if F_CPU == 8000000 
-                    " C RAW",
-                    " % RAW",
-                  #else
-                    " C",
-                    " %",
-                  #endif
-                  #if F_CPU == 8000000 
-                    " lx",
-                  #else
-                    " %",
-                  #endif
-                    " %",
-                    " mV",
-                    " kOhm",
-                    " kOhm",
-                    " mV",
-                    "",
-                  };  
+//The Authentification for communecter/element/save base64(user:password)
+//static char* AUTHPH = (char *)"Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
+static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
+// Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
+static char* WEB[6] = {" HTTP/1.1\nHost: ",
+                       "User-Agent: SmartCitizen \n",
+                       "X-SmartCitizenMacADDR: ",
+                       "X-SmartCitizenApiKey: ",
+                       "X-SmartCitizenVersion: ",
+                       "X-SmartCitizenData: "
+                      };
+
+// Time server request -  EndPoint: http://data.smartcitizen.me/datetime
+// static char* WEBTIME[3]={
+//                  /*Servidor de tiempo*/
+//               "GET /datetime HTTP/1.1\n",
+//               "Host: \n",
+//               "User-Agent: SmartCitizen \n\n"
+//               };
+
+
+// Data JSON structure
+static char* SERVER[11] = {
+  "{\"temp\":\"",
+  "\",\"hum\":\"",
+  "\",\"light\":\"",
+  "\",\"bat\":\"",
+  "\",\"panel\":\"",
+  "\",\"co\":\"",
+  "\",\"no2\":\"",
+  "\",\"noise\":\"",
+  "\",\"nets\":\"",
+  "\",\"timestamp\":\"",
+  "\"}"
+};
+
+static char* SENSOR[10] = {
+  "Temperature: ",
+  "Humidity: ",
+  "Light: ",
+  "Battery: ",
+  "Solar Panel: ",
+  "Carbon Monxide: ",
+  "Nitrogen Dioxide: ",
+  "Noise: ",
+  "Wifi Spots: ",
+  "UTC: "
+};
+
+static char* UNITS[9] = {
+#if F_CPU == 8000000
+  " C RAW",
+  " % RAW",
+#else
+  " C",
+  " %",
+#endif
+#if F_CPU == 8000000
+  " lx",
+#else
+  " %",
+#endif
+  " %",
+  " mV",
+  " kOhm",
+  " kOhm",
+  " mV",
+  "",
+};

@@ -1,8 +1,8 @@
 /*
 
   Smart Citizen Kit
-  Ambient Board Beta Firmware v. 0.9.4
-
+  Ambient Board Beta Firmware v. 0.9.5a
+  Modif par Danzal974 le 19/01/2017
   http://smartcitizen.me/
 
 
