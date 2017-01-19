@@ -236,7 +236,10 @@ void SCKBase::writeData(uint32_t eeaddress, long data, uint8_t location)
     for (int i =0; i<4; i++) 
       {
         if (location == EXTERNAL) writeEEPROM(eeaddress + (3 -i) , data>>(i*8));
-        else EEPROM.write(eeaddress + (3 -i), data>>(i*8));
+        else {EEPROM.write(eeaddress + (3 -i), data>>(i*8));
+        Serial.println("ecriture en eeprom par writeData 2");
+        }
+       
       }
 
 }
@@ -257,6 +260,7 @@ void SCKBase::writeData(uint32_t eeaddress, uint16_t pos, char* text, uint8_t lo
         {
           if (eeaddressfree>=DEFAULT_ADDR_SSID) if (text[i - eeaddressfree]==' ') text[i - eeaddressfree]='$';
           EEPROM.write(i, text[i - eeaddressfree]); 
+          Serial.println("ecriture en eeprom par writeData 2");
         }
     }
 }
@@ -400,8 +404,8 @@ boolean SCKBase::RTCtime(char *time) {
 
 boolean SCKBase::RTCisValid(char *time) {
   RTCtime(time);
-  //If year is 2016 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
-  if (time[0] == '2' && time[1] == '0' && time[2] == '1' && time[3] == '6') return true;
+  //If year is 2017 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
+  if (time[0] == '2' && time[1] == '0' && time[2] == '1' && time[3] == '7') return true;
   return false;
 }
 
@@ -423,12 +427,7 @@ uint16_t SCKBase::getPanel(float Vref){
   return value;
 }
 
-const uint16_t batTable[] = {
-  3078,
-  3364,
-  3468,
-  3540,
-  3600,
+const uint16_t batTable[] PROGMEM = {
   3641,
   3682,
   3701,
@@ -535,7 +534,7 @@ uint16_t SCKBase::getBattery(float Vref) {
   float voltage = Vref*temp/1023.;
 #endif
   uint16_t percent = 1000;
-  for(uint16_t i = 0; i < 100; i++) {
+  for(uint16_t i = 5; i < 100; i++) {
     if(voltage < batTable[i]) {
       percent = i * 10;
       break;
@@ -553,7 +552,7 @@ uint16_t SCKBase::getBattery(float Vref) {
   return percent;
 }
 
-boolean SCKBase::findInResponse(const char *toMatch,
+boolean SCKBase::findInResponse(const char *toMatch, 
 unsigned int timeOut = 1000) {
   int byteRead;
 
@@ -955,15 +954,14 @@ boolean SCKBase::update() {
   else return false;
 }
 
-uint32_t baud[7]={
-  2400, 4800, 9600, 19200, 38400, 57600, 115200};
+uint32_t baud[6]={ 4800, 9600, 19200, 38400, 57600, 115200};
 
 void SCKBase::repair()
 {
   if(!enterCommandMode())
   {
     boolean repair = true;
-    for (int i=6; ((i>=0)&&repair); i--)
+    for (int i=5; ((i>=0)&&repair); i--)
     {
       Serial1.begin(baud[i]);
       if(enterCommandMode()) 
