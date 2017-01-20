@@ -40,7 +40,7 @@
 #define networks 2
 #if (networks > 0)
 static char* mySSID[networks]      = {"SmartCitizenKit","Livebox-99F6"};
-static char* myPassword[networks]  = {"WlanForSCK12345", "bethechange"};
+static char* myPassword[networks]  = {"WlanForSCK12345","bethechange"};
 static char* wifiEncript[networks] = { WPA2        ,  WPA2            };
 static char* antennaExt[networks]  = { INT_ANT     ,  INT_ANT         };
 #endif
@@ -213,14 +213,13 @@ static char* antennaExt[networks]  = { INT_ANT     ,  INT_ANT         };
 static char buffer[buffer_length];
 
 #define nb_host 2
-static char* HOSTADDR[nb_host] = {"192.168.1.6", "192.168.1.6" }; //"data.smartcitizen.me","dev.communecter.org"
+static char* HOSTADDR[nb_host] = {"data.smartcitizen.me","192.168.1.6"}; //"data.smartcitizen.me","dev.communecter.org"
 
-static char* ENDPTHTTP[nb_host] = {"/ph/communecter/element/save", "/ph/communecter/element/save"};  //"/add",communecter/element/save"
+static char* ENDPTHTTP[nb_host] = {"/add","/ph/communecter/element/save"};  //"/add",communecter/element/save"
 
-static char* TIMEENDPOINT[nb_host] = {"/ph/api/tool/datetime", "/ph/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[nb_host] = {"/datetime","/ph/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
-//The Authentification for communecter/element/save base64(user:password)
-
+//The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
 static char* WEB[6] = {" HTTP/1.1\nHost: ",
