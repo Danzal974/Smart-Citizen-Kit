@@ -293,7 +293,7 @@ for(byte j=0;j<nb_host;j++){
 #endif
       digitalWrite(AWAKE, HIGH);
     }
-    if (!wificonnected) wificonnected = base__.connect());  //Wifi connect
+    if (!wificonnected) wificonnected = base__.connect();  //Wifi connect
     if (wificonnected)
     {
 #if debugEnabled
