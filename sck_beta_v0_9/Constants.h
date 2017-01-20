@@ -7,7 +7,7 @@
 //#include <avr/pgmspace.h>
 
 #define debugEnabled   true
-#define decouplerComp   true   //Only for version Goteo 1.0
+#define decouplerComp   false   //Only for version Goteo 1.0
 
 #if F_CPU == 8000000
 #define FirmWare  "1.1-0.9.4"
@@ -39,10 +39,10 @@
 
 #define networks 2
 #if (networks > 0)
-static char* mySSID[networks]      = {(char *)"Livebox-99F6", (char *)"SmartCitizenKit"};
-static char* myPassword[networks]  = {(char *)"bethechange", (char *)"WlanForSCK12345"};
-static char* wifiEncript[networks] = {(char *) WPA2        , (char *) WPA2            };
-static char* antennaExt[networks]  = {(char *) INT_ANT     , (char *) INT_ANT         };
+static char* mySSID[networks]      = {"SmartCitizenKit","Livebox-99F6"};
+static char* myPassword[networks]  = {"WlanForSCK12345", "bethechange"};
+static char* wifiEncript[networks] = { WPA2        ,  WPA2            };
+static char* antennaExt[networks]  = { INT_ANT     ,  INT_ANT         };
 #endif
 
 #define TWI_FREQ 400000L //Frecuencia bus I2C
@@ -213,32 +213,22 @@ static char* antennaExt[networks]  = {(char *) INT_ANT     , (char *) INT_ANT   
 static char buffer[buffer_length];
 
 #define nb_host 2
-static char* HOSTADDR[nb_host] = {"data.smartcitizen.me", "192.168.1.29" }; //"dev.communecter.org",
-//space after endpoint and timeendpoint
-static char* ENDPTHTTP[nb_host] = {"/add", "/ph/communecter/element/save"};
+static char* HOSTADDR[nb_host] = {"192.168.1.6", "192.168.1.6" }; //"data.smartcitizen.me","dev.communecter.org"
 
-static char* TIMEENDPOINT[nb_host] = {"/datetime", "/ph/api/tool/datetime"};
+static char* ENDPTHTTP[nb_host] = {"/ph/communecter/element/save", "/ph/communecter/element/save"};  //"/add",communecter/element/save"
+
+static char* TIMEENDPOINT[nb_host] = {"/ph/api/tool/datetime", "/ph/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter/element/save base64(user:password)
-//static char* AUTHPH = (char *)"Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
 static char* WEB[6] = {" HTTP/1.1\nHost: ",
-                       "User-Agent: SmartCitizen \n",
+                       "\nUser-Agent: SmartCitizen \n",
                        "X-SmartCitizenMacADDR: ",
                        "X-SmartCitizenApiKey: ",
                        "X-SmartCitizenVersion: ",
                        "X-SmartCitizenData: "
                       };
-
-// Time server request -  EndPoint: http://data.smartcitizen.me/datetime
-// static char* WEBTIME[3]={
-//                  /*Servidor de tiempo*/
-//               "GET /datetime HTTP/1.1\n",
-//               "Host: \n",
-//               "User-Agent: SmartCitizen \n\n"
-//               };
-
 
 // Data JSON structure
 static char* SERVER[11] = {

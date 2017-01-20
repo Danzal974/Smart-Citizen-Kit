@@ -237,7 +237,7 @@ void SCKBase::writeData(uint32_t eeaddress, long data, uint8_t location)
       {
         if (location == EXTERNAL) writeEEPROM(eeaddress + (3 -i) , data>>(i*8));
         else {EEPROM.write(eeaddress + (3 -i), data>>(i*8));
-        Serial.println("ecriture en eeprom par writeData 2");
+        Serial.println("ecriture en eeprom par writeData 1");
         }
        
       }
@@ -534,9 +534,9 @@ uint16_t SCKBase::getBattery(float Vref) {
   float voltage = Vref*temp/1023.;
 #endif
   uint16_t percent = 1000;
-  for(uint16_t i = 5; i < 100; i++) {
+  for(uint16_t i = 0; i < 95; i++) {
     if(voltage < batTable[i]) {
-      percent = i * 10;
+      percent = (i+5) * 10;
       break;
     }
   }

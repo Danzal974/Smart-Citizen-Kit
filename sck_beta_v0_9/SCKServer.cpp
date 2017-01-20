@@ -20,23 +20,27 @@ SCKAmbient ambient__;
 
 #define TIME_BUFFER_SIZE 20
 
+byte host = 0;
+
 boolean SCKServer::time(char *time_) {
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
+  byte hosttime = 0;
   //retry < 5
   while ((retry < 4) && (!ok)) 
   {
     retry++;
     if (base__.enterCommandMode())
     {
-      if (base__.open(HOSTADDR[1], 80))
+      if (base__.open(HOSTADDR[hosttime], 80))
       {
         Serial1.print((char *)"GET ");
-        Serial1.print(TIMEENDPOINT[1]);
+        Serial1.print(TIMEENDPOINT[hosttime]);
         Serial1.print(WEB[0]);
-        Serial1.println(HOSTADDR[1]);
-        Serial1.println(WEB[1]);
+        Serial1.print(HOSTADDR[hosttime]);
+        Serial1.print(WEB[1]);
+        Serial1.print("\n");
 
         if (base__.findInResponse("UTC:", 2000))
         {
@@ -246,7 +250,7 @@ boolean SCKServer::connect()
   int retry = 0;
 
   while (true) {
-    if (base__.open(HOSTADDR[1], 80)) break; //TODO HOST ADDR HOSTADDR[j] "192.168.1.6"
+    if (base__.open(HOSTADDR[host], 80)) break; 
     else
     {
       retry++;
@@ -254,12 +258,12 @@ boolean SCKServer::connect()
     }
   }
   Serial1.print("PUT ");
-  Serial1.print(ENDPTHTTP[1]); // in Constants : 1 = "/ph/communecter/element/save " | 0 = "/add "
+  Serial1.print(ENDPTHTTP[host]); // in Constants 
   Serial1.print(WEB[0]);
-  Serial1.println(HOSTADDR[1]);
+  Serial1.print(HOSTADDR[host]); // 
   Serial1.print(WEB[1]);
-  //if (j==1) ->
-  Serial1.print(AUTHPH); //
+  //if (host==1) 
+  Serial1.print(AUTHPH); // required for communecter.org
   Serial1.print(WEB[2]);
   Serial1.println(base__.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC ADDRESS
   Serial1.print(WEB[3]);
@@ -278,21 +282,26 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
   strncpy(tmpTime, time, 20);
   uint16_t updates = (base__.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - base__.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
   uint16_t NumUpdates = base__.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
+  boolean wifiConnected = false;
+  boolean timeNetUpdated = false;
+ for (byte j=0; j<nb_host; j++){ //a revoir
   if (updates >= (NumUpdates - 1) || instant)
   {
-    if (sleep)
+    if (sleep && j==0)
     {
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("SCK Waking up..."));
 #endif
       digitalWrite(AWAKE, HIGH);
     }
-    if (base__.connect())  //Wifi connect
+    if (!wifiConnected) wifiConnected = base__.connect();
+    if (wifiConnected)  //Wifi connect
     {
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("SCK Connected to Wi-Fi!!"));
 #endif
-      if (update(value, time)) //Update time and nets
+      if (!timeNetUpdated) timeNetUpdated = update(value, time);
+      if (timeNetUpdated) //Update time and nets
       {
 #if debugEnabled
         if (!ambient__.debug_state())
@@ -301,6 +310,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
           Serial.println(updates + 1);
         }
 #endif
+        host = j;
         int num_post = updates;
         int cycles = cycles = updates / POST_MAX;;
         if (updates > POST_MAX)
@@ -315,7 +325,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
         connect();
         json_update(num_post, value, tmpTime, true);
 #if debugEnabled
-        if (!ambient__.debug_state()) Serial.println(F("Posted to Server!"));
+        if (!ambient__.debug_state()){ Serial.println(F("Posted to Server host : "));Serial.println(host);}
 #endif
 
       }
@@ -331,17 +341,16 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("Old connection active. Closing..."));
 #endif
-      base__.close();
+     if (j>=(nb_host-1)) {base__.close(); host=0;}
     }
     else //No connect
     {
       if (base__.checkRTC()) base__.RTCtime(time);
       else time = "#";
-      addFIFO(value, time);
+      if (j==0) addFIFO(value, time);
 #if debugEnabled
       if (!ambient__.debug_state()) {
-        Serial.print(F("Error in connection!!"));
-        Serial.println(F(" Data saved in memory"));
+        Serial.println(F("Error in connection! Data saved in memory"));
         Serial.print(F("Pending updates: "));
         Serial.println(updates + 1);
       }
@@ -363,11 +372,12 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
   {
     if (base__.checkRTC()) base__.RTCtime(time);
     else time = "#";
-    addFIFO(value, time);
+    if (j==0) addFIFO(value, time);
 #if debugEnabled
     if (!ambient__.debug_state()) Serial.println(F("Saved in memory!!"));
 #endif
   }
+ }
   *wait_moment = false;
 }
 

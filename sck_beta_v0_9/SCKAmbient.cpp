@@ -35,7 +35,7 @@ SENSOR Contants and Defaults
 
 
 #define USBEnabled      true 
-#define autoUpdateWiFly true
+#define autoUpdateWiFly false
 #define debugAmbient    false
 
 SCKBase base_;
@@ -145,7 +145,7 @@ void SCKAmbient::ini()
         if (!debugON) Serial.println(F("SCK Connected to Wi-Fi!!"));
       #endif
       #if autoUpdateWiFly
-        int report = base_.checkWiFly();
+        byte report = base_.checkWiFly();
         #if debugEnabled
           if (!debugON) {
             if (report == 1) Serial.println(F("Wifly Updated."));
@@ -170,8 +170,8 @@ void SCKAmbient::ini()
         if (!debugON) {
           Serial.print(F("Wifi conection failed!!! Using ssid: "));
           printNetWorks(DEFAULT_ADDR_SSID, false);
-          Serial.print(F(" and pass: "));
-          printNetWorks(DEFAULT_ADDR_PASS, false);
+          //Serial.print(F(" and pass: "));
+          //printNetWorks(DEFAULT_ADDR_PASS, false);
           Serial.println("");
         }
       #endif
@@ -777,9 +777,8 @@ void SCKAmbient::execute(boolean instant) {
     if (!RTCupdatedSinceBoot && !base_.RTCisValid(time)) {
       digitalWrite(AWAKE, HIGH);
       #if debugEnabled
-        if (!debugON) Serial.println(F("RTC not updated!!!"));
-        if (!debugON) Serial.println(F("With no valid time it's useless to take readings!!"));
-        if (!debugON) Serial.println(F("Trying to get valid time..."));
+        if (!debugON) { Serial.println(F("RTC not updated!! it's useless to take readings!!"));
+                        Serial.println(F("Trying to get valid time..."));}
       #endif
       if (base_.connect()){
         #if debugEnabled
