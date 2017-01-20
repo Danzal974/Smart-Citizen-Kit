@@ -220,6 +220,7 @@ static char* ENDPTHTTP[nb_host] = {"/ph/communecter/element/save", "/ph/communec
 static char* TIMEENDPOINT[nb_host] = {"/ph/api/tool/datetime", "/ph/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter/element/save base64(user:password)
+
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
 static char* WEB[6] = {" HTTP/1.1\nHost: ",

@@ -26,6 +26,7 @@ boolean SCKServer::time(char *time_) {
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
+
   byte hosttime = 0;
   //retry < 5
   while ((retry < 4) && (!ok)) 
@@ -341,12 +342,14 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("Old connection active. Closing..."));
 #endif
+
      if (j>=(nb_host-1)) {base__.close(); host=0;}
     }
     else //No connect
     {
       if (base__.checkRTC()) base__.RTCtime(time);
       else time = "#";
+
       if (j==0) addFIFO(value, time);
 #if debugEnabled
       if (!ambient__.debug_state()) {
