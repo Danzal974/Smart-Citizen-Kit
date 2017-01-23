@@ -404,8 +404,8 @@ boolean SCKBase::RTCtime(char *time) {
 
 boolean SCKBase::RTCisValid(char *time) {
   RTCtime(time);
-  //If year is 2017 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
-  if (time[0] == '2' && time[1] == '0' && time[2] == '1' && time[3] == '7') return true;
+  //If year is 2016 ou 2017 we consider rtc data to ba a valid date (without update RTC starts in year 2000)
+  if (time[0] == '2' && time[1] == '0' && time[2] == '1' && ( time[3] == '7' || time[3] == '6')) return true;
   return false;
 }
 

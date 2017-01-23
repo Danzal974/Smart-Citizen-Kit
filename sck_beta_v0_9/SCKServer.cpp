@@ -24,8 +24,7 @@ boolean SCKServer::time(char *time_) {
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
-
-  byte hosttime = 0; //0 : smartcitizen ; 1 : communecter
+  byte hosttime = 1; //0 : smartcitizen ; 1 : communecter
   while ((retry < 5) && (!ok)) 
   {
     retry++;
@@ -33,12 +32,12 @@ boolean SCKServer::time(char *time_) {
     {
       if (base__.open(HOSTADDR[hosttime], 80))
       {
-        Serial1.print((char *)"GET ");
+        Serial1.print("GET ");
         Serial1.print(TIMEENDPOINT[hosttime]);
         Serial1.print(WEB[0]);
         Serial1.print(HOSTADDR[hosttime]);
-        Serial1.print(WEB[1]);
-        Serial1.print("\n");
+        Serial1.println(WEB[1]);
+        //Serial1.print("\n");
 
         if (base__.findInResponse("UTC:", 2000))
         {
@@ -336,12 +335,12 @@ for(byte j=0;j<nb_host;j++){
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("Old connection active. Closing..."));
 #endif
-      if(wificonnected && j==(nb_host-1)) { base__.close(); wificonnected=false; }
+      if(wificonnected && j>=(nb_host-1)) { base__.close(); wificonnected=false; }
     }
     else //No connect
     {
       if (base__.checkRTC()) base__.RTCtime(time);
-      else time = (char *)"#";
+      else time = "#";
 
       if (j==0) addFIFO(value, time);
 #if debugEnabled
@@ -367,7 +366,7 @@ for(byte j=0;j<nb_host;j++){
   else
   {
     if (base__.checkRTC()) base__.RTCtime(time);
-    else time = (char *)"#";
+    else time = "#";
     if (j==0) addFIFO(value, time);
 #if debugEnabled
     if (!ambient__.debug_state()) Serial.println(F("Saved in memory!!"));
