@@ -35,7 +35,7 @@ SENSOR Contants and Defaults
 
 
 #define USBEnabled      true 
-#define autoUpdateWiFly false
+#define autoUpdateWiFly true
 #define debugAmbient    false
 
 SCKBase base_;

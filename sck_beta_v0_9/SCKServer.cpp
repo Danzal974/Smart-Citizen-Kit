@@ -25,7 +25,7 @@ boolean SCKServer::time(char *time_) {
   uint8_t count = 0;
   byte retry = 0;
 
-  byte hosttime = 0;
+  byte hosttime = 0; //0 : smartcitizen ; 1 : communecter
   while ((retry < 5) && (!ok)) 
   {
     retry++;
@@ -336,12 +336,12 @@ for(byte j=0;j<nb_host;j++){
 #if debugEnabled
       if (!ambient__.debug_state()) Serial.println(F("Old connection active. Closing..."));
 #endif
-      if(wificonnected && j==(nb_host-1)) base__.close();
+      if(wificonnected && j==(nb_host-1)) { base__.close(); wificonnected=false; }
     }
     else //No connect
     {
       if (base__.checkRTC()) base__.RTCtime(time);
-      else time = "#";
+      else time = (char *)"#";
 
       if (j==0) addFIFO(value, time);
 #if debugEnabled
@@ -367,7 +367,7 @@ for(byte j=0;j<nb_host;j++){
   else
   {
     if (base__.checkRTC()) base__.RTCtime(time);
-    else time = "#";
+    else time = (char *)"#";
     if (j==0) addFIFO(value, time);
 #if debugEnabled
     if (!ambient__.debug_state()) Serial.println(F("Saved in memory!!"));

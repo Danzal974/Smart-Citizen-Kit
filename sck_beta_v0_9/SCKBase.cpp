@@ -427,7 +427,12 @@ uint16_t SCKBase::getPanel(float Vref){
   return value;
 }
 
-const uint16_t batTable[] PROGMEM = {
+const uint16_t batTable[] = {
+  3078,
+  3364,
+  3468,
+  3540,
+  3600,
   3641,
   3682,
   3701,
@@ -534,9 +539,9 @@ uint16_t SCKBase::getBattery(float Vref) {
   float voltage = Vref*temp/1023.;
 #endif
   uint16_t percent = 1000;
-  for(uint16_t i = 0; i < 95; i++) {
+  for(uint16_t i = 0; i < 100; i++) {
     if(voltage < batTable[i]) {
-      percent = (i+5) * 10;
+      percent = i * 10;
       break;
     }
   }

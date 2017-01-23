@@ -37,12 +37,12 @@
 
 */
 
-#define networks 2
+#define networks 0
 #if (networks > 0)
-static char* mySSID[networks]      = {"SmartCitizenKit","Livebox-99F6"};
-static char* myPassword[networks]  = {"WlanForSCK12345","bethechange"};
-static char* wifiEncript[networks] = { WPA2        ,  WPA2            };
-static char* antennaExt[networks]  = { INT_ANT     ,  INT_ANT         };
+static char* mySSID[networks]      = {(char *)"ssid"};
+static char* myPassword[networks]  = {(char *)"pass"};
+static char* wifiEncript[networks] = { (char *) WPA2       };
+static char* antennaExt[networks]  = { (char *) INT_ANT    };
 #endif
 
 #define TWI_FREQ 400000L //Frecuencia bus I2C
@@ -213,36 +213,36 @@ static char* antennaExt[networks]  = { INT_ANT     ,  INT_ANT         };
 static char buffer[buffer_length];
 
 #define nb_host 2
-static char* HOSTADDR[nb_host] = {"data.smartcitizen.me","192.168.1.6"}; //"data.smartcitizen.me","dev.communecter.org"
+static char* HOSTADDR[nb_host] = {(char *)"data.smartcitizen.me",(char *)"dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
 
-static char* ENDPTHTTP[nb_host] = {"/add","/ph/communecter/element/save"};  //"/add",communecter/element/save"
+static char* ENDPTHTTP[nb_host] = {(char *)"/add",(char *)"/communecter/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[nb_host] = {"/datetime","/ph/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[nb_host] = {(char *)"/datetime",(char *)"/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
-static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
+static char* AUTHPH = (char *)"Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
-static char* WEB[6] = {" HTTP/1.1\nHost: ",
-                       "\nUser-Agent: SmartCitizen \n",
-                       "X-SmartCitizenMacADDR: ",
-                       "X-SmartCitizenApiKey: ",
-                       "X-SmartCitizenVersion: ",
-                       "X-SmartCitizenData: "
+static char* WEB[6] = {(char *)" HTTP/1.1\nHost: ",
+                       (char *)"\nUser-Agent: SmartCitizen \n",
+                       (char *)"X-SmartCitizenMacADDR: ",
+                       (char *)"X-SmartCitizenApiKey: ",
+                       (char *)"X-SmartCitizenVersion: ",
+                       (char *)"X-SmartCitizenData: "
                       };
 
 // Data JSON structure
 static char* SERVER[11] = {
-  "{\"temp\":\"",
-  "\",\"hum\":\"",
-  "\",\"light\":\"",
-  "\",\"bat\":\"",
-  "\",\"panel\":\"",
-  "\",\"co\":\"",
-  "\",\"no2\":\"",
-  "\",\"noise\":\"",
-  "\",\"nets\":\"",
-  "\",\"timestamp\":\"",
-  "\"}"
+  (char *)"{\"temp\":\"",
+  (char *)"\",\"hum\":\"",
+  (char *)"\",\"light\":\"",
+  (char *)"\",\"bat\":\"",
+  (char *)"\",\"panel\":\"",
+  (char *)"\",\"co\":\"",
+  (char *)"\",\"no2\":\"",
+  (char *)"\",\"noise\":\"",
+  (char *)"\",\"nets\":\"",
+  (char *)"\",\"timestamp\":\"",
+  (char *)"\"}"
 };
 
 static char* SENSOR[10] = {
@@ -278,3 +278,4 @@ static char* UNITS[9] = {
   " mV",
   "",
 };
+
