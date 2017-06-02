@@ -4,10 +4,26 @@
   Defines ATMEGA32U4 pins and other SENSORS and COMUNICATIONS static parameters.
 
 */
-//#include <avr/pgmspace.h>
+#ifndef __CONSTANTS_H__
+#define __CONSTANTS_H__
 
-#define debugEnabled   true
-#define decouplerComp   false   //Only for version Goteo 1.0
+
+#define decouplerComp     false   //Only for version Goteo 1.0
+
+#define USBEnabled        true
+
+/*
+    DEBUGGING
+*/
+
+#define debugEnabled      true
+#define debugBase         false
+#define debugServer       false
+#define debugAmbient      false
+
+#define TIME_BUFFER_SIZE      20
+#define SENSORS               9     // Numbers of sensors in the board
+#define EXTERNAL_EEPROM_SIZE  32000 // Number of octets
 
 #if F_CPU == 8000000
 #define FirmWare  "1.1-0.9.4"
@@ -15,11 +31,13 @@
 #define FirmWare  "1.0-0.9.4"
 #endif
 
+
 /*
 
   WIFI AND SERVER STATICS - WiFly, Http server parameters.
 
 */
+#define autoUpdateWiFly   true
 // WiFly Auth Modes
 #define OPEN   "0"
 #define WEP    "1"
@@ -37,12 +55,20 @@
 
 */
 
-#define networks 0
-#if (networks > 0)
-static char* mySSID[networks]      = {"ZEOP-de53b2"}; //"SmartCitizenKit", "ZEOP-de53b2"
-static char* myPassword[networks]  = {"ZTEGC81920f4"}; //"WlanForSCK12345", "ZTEGC81920f4"
-static char* wifiEncript[networks] = {  WPA2     };
-static char* antennaExt[networks]  = { INT_ANT   };
+#define NETWORKS 0
+#if (NETWORKS > 0)
+static char* mySSID[NETWORKS]      = {
+  "SSID1"        , "SSID2"
+};
+static char* myPassword[NETWORKS]  = {
+  "PASS1"      , "PASS2"
+};
+static char* wifiEncript[NETWORKS] = {
+  WPA2         , WPA2
+};
+static char* antennaExt[NETWORKS]  = {
+  INT_ANT      , INT_ANT
+};
 #endif
 
 #define TWI_FREQ 400000L //Frecuencia bus I2C
@@ -102,7 +128,7 @@ static char* antennaExt[networks]  = { INT_ANT   };
 #define MCP2               0x2F    // Direction of the mcp2 Potenciometers that control the microfone pickup
 #define bh1730             0x29    // Direction of the light sensor
 #define Temperature        0x40    // Direction of the sht21    
-#define ADXL 0x53    //ADXL345 device address
+#define ADXL               0x53    // ADXL345 device address
 #else
 #define MCP1               0x2F    // Direction of the mcp1 MICS
 #define MCP2               0x2E    // Direction of the mcp2 REGULATORS
@@ -123,24 +149,24 @@ static char* antennaExt[networks]  = { INT_ANT   };
 
 */
 
-#define MAX_MEMORY                                  571 //Memory size
+#define MAX_MEMORY                                  EXTERNAL_EEPROM_SIZE / ((SENSORS)*4+TIME_BUFFER_SIZE) //Memory size - 571 for 256kbits EEPROM
 
 // SCK Configuration Parameters
 #define EE_ADDR_TIME_VERSION                        0   //32BYTES 
 #define EE_ADDR_TIME_UPDATE                         32  //4BYTES Time between update and update of the sensors in seconds
 #define EE_ADDR_SENSOR_MODE                         36  //4BYTES Type sensors capture
 #define EE_ADDR_NUMBER_UPDATES                      40  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_READ_MEASURE                 44  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_WRITE_MEASURE                48  //4BYTES Number of updates before posting
-#define EE_ADDR_NUMBER_NETS                         52  //4BYTES Number of networks in the memory 
-#define EE_ADDR_APIKEY                              56  //32BYTES Apikey of the device
-#define EE_ADDR_MAC                                 100  //32BYTES MAC of the device
+#define EE_ADDR_NUMBER_READ_MEASURE                 44  //2 * 4BYTES Number of updates before posting
+#define EE_ADDR_NUMBER_WRITE_MEASURE                52  //4BYTES Number of updates before posting
+#define EE_ADDR_NUMBER_NETS                         56  //4BYTES Number of networks in the memory 
+#define EE_ADDR_APIKEY                              60  //32BYTES Apikey of the device
+#define EE_ADDR_MAC                                 92  //32BYTES MAC of the device
 
 // SCK WIFI SETTINGS Parameters
-#define DEFAULT_ADDR_SSID                                150  //160 BYTES
-#define DEFAULT_ADDR_PASS                                310  //160 BYTES
-#define DEFAULT_ADDR_AUTH                                470  //160 BYTES 
-#define DEFAULT_ADDR_ANTENNA                             630  //160 BYTES
+#define DEFAULT_ADDR_SSID                                132  //160 BYTES
+#define DEFAULT_ADDR_PASS                                292  //160 BYTES
+#define DEFAULT_ADDR_AUTH                                452  //160 BYTES 
+#define DEFAULT_ADDR_ANTENNA                             612  //160 BYTES
 
 
 /*
@@ -192,11 +218,11 @@ static char* antennaExt[networks]  = { INT_ANT   };
 */
 
 #if F_CPU == 8000000
-#define  VAL_MAX_BATTERY                             4200
-#define  VAL_MIN_BATTERY                             3000
+#define  VAL_MAX_BATTERY                             4188 //4200
+#define  VAL_MIN_BATTERY                             3078 //3000
 #else
-#define  VAL_MAX_BATTERY                             4050
-#define  VAL_MIN_BATTERY                             3000
+#define  VAL_MAX_BATTERY                             4188 //4050
+#define  VAL_MIN_BATTERY                             3078 //3000
 #endif
 
 
@@ -207,28 +233,46 @@ static char* antennaExt[networks]  = { INT_ANT   };
 #define NORMAL    2  //Nomal mode o real time
 #define ECONOMIC  3  //Economic mode, sensor gas active one time for hour
 
-#define  SENSORS 9  //Numbers of sensors in the board
 
-#define buffer_length        32
+
+#define buffer_length         32
+#define buffer_length2        2*buffer_length
+
 static char buffer[buffer_length];
+static char buffer_int[buffer_length2];
 
-#define nb_host 2
-static char* HOSTADDR[nb_host] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
+#define HOSTS 2
+static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
 
-static char* ENDPTHTTP[nb_host] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
+static char* ENDPTHTTP[HOSTS] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[nb_host] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
+
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
-static char* WEB[6] = {" HTTP/1.1\nHost: ",
-                       "\nUser-Agent: SmartCitizen \n",
-                       "X-SmartCitizenMacADDR: ",
-                       "X-SmartCitizenApiKey: ",
-                       "X-SmartCitizenVersion: ",
-                       "X-SmartCitizenData: "
-                      };
+static char* WEB[6] = {
+//  "data.smartcitizen.me",
+//  "PUT /add HTTP/1.1\n",
+//  "Host: data.smartcitizen.me \n",
+  " HTTP/1.1\nHost: ",
+  " \nUser-Agent: SmartCitizen \n",
+  "X-SmartCitizenMacADDR: ",
+  "X-SmartCitizenApiKey: ",
+  "X-SmartCitizenVersion: ",
+  "X-SmartCitizenData: "
+};
+
+// Time server request -  EndPoint: http://data.smartcitizen.me/datetime
+//static char* WEBTIME[3] = {
+//  /*Servidor de tiempo*/
+//  "GET /datetime HTTP/1.1\n",
+//  "Host: data.smartcitizen.me \n",
+//  "User-Agent: SmartCitizen \n\n"
+//};
+
+static char* WEB200OK = "HTTP/1.1 200 OK";
 
 // Data JSON structure
 static char* SERVER[11] = {
@@ -251,7 +295,7 @@ static char* SENSOR[10] = {
   "Light: ",
   "Battery: ",
   "Solar Panel: ",
-  "Carbon Monxide: ",
+  "Carbon Monoxide: ",
   "Nitrogen Dioxide: ",
   "Noise: ",
   "Wifi Spots: ",
@@ -279,3 +323,4 @@ static char* UNITS[9] = {
   "",
 };
 
+#endif
