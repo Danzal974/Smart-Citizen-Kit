@@ -24,7 +24,7 @@ boolean SCKServer::time(char *time_) {
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
-  byte hosttime = 1; //0 : smartcitizen ; 1 : communecter
+  byte hosttime = 0; //0 : smartcitizen ; 1 : communecter
   while ((retry < 5) && (!ok)) 
   {
     retry++;
@@ -281,7 +281,6 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 
 boolean wificonnected=false;
 for(byte j=0;j<nb_host;j++){
-  
 
   if (updates >= (NumUpdates - 1) || instant)
   {
@@ -296,7 +295,7 @@ for(byte j=0;j<nb_host;j++){
     if (wificonnected)
     {
 #if debugEnabled
-      if (!ambient__.debug_state()) Serial.println(F("SCK Connected to Wi-Fi!!"));
+      if (!ambient__.debug_state()) Serial.println(F("SCK Connected to Wi-Fi!"));
 #endif
       if (update(value, time)) //Update time and nets
       {
@@ -307,6 +306,7 @@ for(byte j=0;j<nb_host;j++){
           Serial.println(updates + 1);
         }
 #endif
+
         int num_post = updates;
         int cycles = cycles = updates / POST_MAX;;
         if (updates > POST_MAX)

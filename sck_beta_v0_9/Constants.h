@@ -37,7 +37,7 @@
 
 */
 
-#define networks 1
+#define networks 0
 #if (networks > 0)
 static char* mySSID[networks]      = {"ZEOP-de53b2"}; //"SmartCitizenKit", "ZEOP-de53b2"
 static char* myPassword[networks]  = {"ZTEGC81920f4"}; //"WlanForSCK12345", "ZTEGC81920f4"
