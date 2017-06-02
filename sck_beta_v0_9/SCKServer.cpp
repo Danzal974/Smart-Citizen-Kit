@@ -4,101 +4,107 @@
 
 */
 
-
-#include "Constants.h"
-#include "SCKServer.h"
-#include "SCKBase.h"
-#include "SCKAmbient.h"
 #include <Wire.h>
 #include <EEPROM.h>
+#include "SCKServer.h"
 
-#define debugServer  false
+SCKServer::SCKServer(SCKBase& base)
+{
+  _base = base;
+}
 
-SCKBase base__;
-SCKServer server__;
-SCKAmbient ambient__;
-
-#define TIME_BUFFER_SIZE 20
-
-boolean SCKServer::time(char *time_) {
+boolean SCKServer::time(char *time_)
+{
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
-  byte hosttime = 0; //0 : smartcitizen ; 1 : communecter
-  while ((retry < 5) && (!ok)) 
-  {
+  byte webtime = 0; //0 : smartcitizen ; 1 : communecter
+  while ((retry < 6) && (!ok)) {
+    webtime = retry % HOSTS;
     retry++;
-    if (base__.enterCommandMode())
-    {
-      if (base__.open(HOSTADDR[hosttime], 80))
-      {
-        Serial1.print("GET ");
-        Serial1.print(TIMEENDPOINT[hosttime]);
-        Serial1.print(WEB[0]);
-        Serial1.print(HOSTADDR[hosttime]);
-        Serial1.println(WEB[1]);
-        //Serial1.print("\n");
 
-        if (base__.findInResponse("UTC:", 2000))
-        {
-          char newChar;
-          byte offset = 0;
-          unsigned long time = millis();
-          while (offset < TIME_BUFFER_SIZE) {
-            if (Serial1.available())
-            {
-              newChar = Serial1.read();
-              time = millis();
-              if (newChar == '#') {
-                ok = true;
-                time_[offset] = '\x00';
-                break;
-              }
-              else if (newChar != -1) {
-                if (newChar == ',')
-                {
-                  if (count < 2) time_[offset] = '-';
-                  else if (count > 2) time_[offset] = ':';
-                  else time_[offset] = ' ';
-                  count++;
+    //if (_base.enterCommandMode()) {
+    if (_base.ready()) {
+      if (_base.open(HOSTADDR[webtime], 80)) {
+        //Requests to the server time
+        Serial1.print("GET ");
+        Serial1.print(TIMEENDPOINT[webtime]);
+        Serial1.print(WEB[0]);
+        Serial1.print(HOSTADDR[webtime]);
+        //Serial1.print(" ");
+        Serial1.print(WEB[1]);
+        Serial1.println(F(""));
+#if debugServer
+        Serial.print(F("GET "));
+        Serial.print(TIMEENDPOINT[webtime]);
+        Serial.print(WEB[0]);
+        Serial.print(HOSTADDR[webtime]);
+        //Serial1.print(" ");
+        Serial.println(WEB[1]);
+        Serial.flush();
+#endif
+        if (_base.findInResponse(WEB200OK, 2000)) {
+          if (_base.findInResponse("UTC:", 2000)) {
+            char newChar;
+            byte offset = 0;
+            unsigned long time = millis();
+            while (offset < TIME_BUFFER_SIZE) {
+              if (Serial1.available()) {
+                newChar = Serial1.read();
+#if debugServer
+                Serial.print(newChar);
+#endif
+                time = millis();
+                if (newChar == '#') {
+                  ok = true;
+                  time_[offset] = '\x00';
+                  break;
+                }
+                else if (newChar != -1) {
+                  if (newChar == ',') {
+                    if (count < 2) time_[offset] = '-';
+                    else if (count > 2) time_[offset] = ':';
+                    else time_[offset] = ' ';
+                    count++;
+                  }
+                  else time_[offset] = newChar;
+                  offset++;
                 }
                 else time_[offset] = newChar;
                 offset++;
               }
-            }
-            else if ((millis() - time) > 1000)
-            {
-              ok = false;
-              break;
+              else if ((millis() - time) > 2000) {
+                ok = false;
+                break;
+              }
             }
           }
-        }
-        else {
+          else {
 #if debugServer
-          Serial.println("FAIL:(");
+            Serial.println("FAIL:(");
 #endif
+          }
         }
-        base__.close();
+        _base.close();
       }
-      //}
     }
   }
-  if (!ok)
-  {
+  if (!ok) {
     time_[0] = '#';
     time_[1] = 0x00;
   }
-  base__.exitCommandMode();
+  //_base.exitCommandMode();
   return ok;
 }
 
-boolean SCKServer::RTCupdate(char *time_) {
+boolean SCKServer::RTCupdate(char *time_)
+{
   byte retry = 0;
-  if (base__.checkRTC()) {
+  if (_base.checkRTC()) {
     if (time(time_)) {
       while (retry < 5) {
         retry++;
-        if (base__.RTCadjust(time_)) {
+        if (_base.RTCadjust(time_)) {
           return true;
         }
       }
@@ -107,17 +113,15 @@ boolean SCKServer::RTCupdate(char *time_) {
   return false;
 }
 
-void SCKServer::json_update(uint16_t updates, long *value, char *time, boolean isMultipart)
+void SCKServer::json_update(uint16_t updates, byte host, long *value, char *time, boolean isMultipart)
 {
 #if debugServer
   Serial.print(F("["));
 #endif
   Serial1.print(F("["));
-  for (int i = 0; i < updates; i++)
-  {
-    readFIFO();
-    if ((i < (updates - 1)) || (isMultipart))
-    {
+  for (int i = 0; i < updates; i++) {
+    readFIFO(host);
+    if ((i < (updates - 1)) || (isMultipart)) {
       Serial1.print(F(","));
 #if debugServer
       Serial.print(F(","));
@@ -125,11 +129,9 @@ void SCKServer::json_update(uint16_t updates, long *value, char *time, boolean i
     }
   }
 
-  if (isMultipart)
-  {
+  if (isMultipart) {
     byte i;
-    for (i = 0; i < 9; i++)
-    {
+    for (i = 0; i < 9; i++) {
       Serial1.print(SERVER[i]);
       Serial1.print(value[i]);
     }
@@ -140,8 +142,7 @@ void SCKServer::json_update(uint16_t updates, long *value, char *time, boolean i
     Serial1.println();
 
 #if debugServer
-    for (i = 0; i < 9; i++)
-    {
+    for (i = 0; i < 9; i++) {
       Serial.print(SERVER[i]);
       Serial.print(value[i]);
     }
@@ -159,220 +160,293 @@ void SCKServer::json_update(uint16_t updates, long *value, char *time, boolean i
 
 void SCKServer::addFIFO(long *value, char *time)
 {
-  uint16_t updates = (base__.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - base__.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
-  if (updates < MAX_MEMORY)
-  {
-    int eeaddress = base__.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL);
+  uint16_t updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
+  if (updates < MAX_MEMORY) {
+    int eeaddress = _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL);
     int i = 0;
-    for (i = 0; i < 9; i++)
-    {
-      base__.writeData(eeaddress + i * 4, value[i], EXTERNAL);
+    for (i = 0; i < SENSORS; i++) {
+      _base.writeData(eeaddress + i * 4, value[i], EXTERNAL);
     }
-    base__.writeData(eeaddress + i * 4, 0, time, EXTERNAL);
+    _base.writeData(eeaddress + i * 4, 0, time, EXTERNAL);
     eeaddress = eeaddress + (SENSORS) * 4 + TIME_BUFFER_SIZE;
-    base__.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, eeaddress, INTERNAL);
+    _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, eeaddress, INTERNAL);
   }
-  else
-  {
+  else {
 #if debugEnabled
-    if (!ambient__.debug_state()) Serial.println(F("Memory limit exceeded!!"));
+    if (_base.getDebugState()) Serial.println(F("Memory limit exceeded!!"));
 #endif
   }
 }
 
-void SCKServer::readFIFO()
+void SCKServer::readFIFO(byte host)
 {
   int i = 0;
-  int eeaddress = base__.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL);
-  for (i = 0; i < 9; i++)
-  {
+  int eeaddressread = _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), INTERNAL);
+  for (i = 0; i < SENSORS; i++) {
     Serial1.print(SERVER[i]);
-    Serial1.print(base__.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
+    Serial1.print(_base.readData(eeaddressread + i * 4, EXTERNAL)); //SENSORS
   }
   Serial1.print(SERVER[i]);
-  Serial1.print(base__.readData(eeaddress + i * 4, 0, EXTERNAL)); //TIME
+  Serial1.print(_base.readData(eeaddressread + i * 4, 0, EXTERNAL)); //TIME
   Serial1.print(SERVER[i + 1]);
 
 #if debugServer
-  for (i = 0; i < 9; i++)
-  {
+  for (i = 0; i < SENSORS; i++) {
     Serial.print(SERVER[i]);
-    Serial.print(base__.readData(eeaddress + i * 4, EXTERNAL)); //SENSORS
+    Serial.print(_base.readData(eeaddressread + i * 4, EXTERNAL)); //SENSORS
   }
   Serial.print(SERVER[i]);
-  Serial.print(base__.readData(eeaddress + i * 4, 0, EXTERNAL)); //TIME
+  Serial.print(_base.readData(eeaddressread + i * 4, 0, EXTERNAL)); //TIME
   Serial.print(SERVER[i + 1]);
 #endif
-
-  eeaddress = eeaddress + (SENSORS) * 4 + TIME_BUFFER_SIZE;
-  if (eeaddress == base__.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL))
-  {
-    base__.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
-    base__.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
+  int eeaddresswrite = _base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL);
+#if debugServer
+  Serial.print(F("\nWrite Address : "));
+  Serial.println(eeaddresswrite);
+#endif
+  /*
+    eeaddressread = eeaddressread + (SENSORS * 4) + TIME_BUFFER_SIZE; // Next Measure to read
+    if (host < (HOSTS - 1)) {
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
+    }
+    else if ( (_base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL) + (SENSORS * 4) + TIME_BUFFER_SIZE) == eeaddresswrite) {
+      _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, 0, INTERNAL);
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE, 0, INTERNAL);
+    }
+    else _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddress, INTERNAL);
+  */
+  // Set the Next address to read
+  eeaddressread = eeaddressread + (SENSORS * 4) + TIME_BUFFER_SIZE;
+  _base.writeData(EE_ADDR_NUMBER_READ_MEASURE + (host * 4), eeaddressread, INTERNAL);
+#if debugServer
+  Serial.print(F("Next Address : "));
+  Serial.println(eeaddressread);
+#endif
+  boolean sameNextMeasure = true;
+  for (i = 0; i < (HOSTS - 1) && sameNextMeasure; i++) {
+    if (_base.readData(EE_ADDR_NUMBER_READ_MEASURE + (i * 4), INTERNAL) != _base.readData(EE_ADDR_NUMBER_READ_MEASURE + ((i + 1) * 4), INTERNAL)) sameNextMeasure = false;
   }
-  else base__.writeData(EE_ADDR_NUMBER_READ_MEASURE, eeaddress, INTERNAL);
+  if (sameNextMeasure) {
+    // Move data in EEPROM
+    for (i = eeaddressread; i < eeaddresswrite; i += (SENSORS * 4) + TIME_BUFFER_SIZE) {
+      _base.writeData(i - eeaddressread, _base.readData(i, EXTERNAL), EXTERNAL);
+    }
+    for (i = 0; i < HOSTS ; i++) {
+      _base.writeData(EE_ADDR_NUMBER_READ_MEASURE  + (i * 4), 0, INTERNAL);
+    }
+    _base.writeData(EE_ADDR_NUMBER_WRITE_MEASURE, eeaddresswrite - eeaddressread, INTERNAL);
+  }
+
 }
 
 #define numbers_retry 5
 
 boolean SCKServer::update(long *value, char *time_)
 {
-  value[8] = base__.scan();  //Wifi Nets
+  value[8] = _base.scan();  //Wifi Nets
   byte retry = 0;
-  if (time(time_)) //Update server time
-  {
-    if (base__.checkRTC())
-    {
-      while (!base__.RTCadjust(time_) && (retry < numbers_retry)) retry++;
+  if (time(time_)) {
+    //Update server time
+    if (_base.checkRTC()) {
+      while (!_base.RTCadjust(time_) && (retry < numbers_retry)) retry++;
     }
   }
-  else if (base__.checkRTC())
-  {
-    base__.RTCtime(time_);
+  else if (_base.checkRTC()) {
+    _base.RTCtime(time_);
 #if debugEnabled
-    if (!ambient__.debug_state()) Serial.println(F("Fail server time!!"));
+    if (_base.getDebugState()) Serial.println(F("Fail server time!!"));
 #endif
   }
-  else
-  {
+  else {
     time_ = "#";
     return false;
   }
   return true;
 }
 
-boolean SCKServer::connect(byte host)
+boolean SCKServer::connect(byte webhost)
 {
   int retry = 0;
 
   while (true) {
-    if (base__.open(HOSTADDR[host], 80)) break; 
-    else
-    {
+    if (_base.open(HOSTADDR[webhost], 80)) break;
+    else {
       retry++;
       if (retry >= numbers_retry) return false;
     }
   }
   Serial1.print("PUT ");
-  Serial1.print(ENDPTHTTP[host]); // in Constants 
+  Serial1.print(ENDPTHTTP[webhost]); // in Constants
   Serial1.print(WEB[0]);
-  Serial1.print(HOSTADDR[host]); // 
+  Serial1.print(HOSTADDR[webhost]); //
   Serial1.print(WEB[1]);
-  if (host == 1) Serial1.print(AUTHPH); // required for communecter.org
+  if (webhost == 1) Serial1.print(AUTHPH); // required for communecter.org
   Serial1.print(WEB[2]);
-  Serial1.println(base__.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC ADDRESS
+  Serial1.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC ADDRESS
   Serial1.print(WEB[3]);
-  Serial1.println(base__.readData(EE_ADDR_APIKEY, 0, INTERNAL)); //Apikey
+  Serial1.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL)); //Apikey
   Serial1.print(WEB[4]);
   Serial1.println(FirmWare); //Firmware version
   Serial1.print(WEB[5]);
+
+#if debugServer
+  if (_base.getDebugState()) {
+    Serial.print(F("PUT "));
+    Serial.print(ENDPTHTTP[webhost]); // in Constants
+    Serial.print(WEB[0]);
+    Serial.print(HOSTADDR[webhost]); //
+    Serial.print(WEB[1]);
+    if (webhost == 1) Serial.print(AUTHPH); // required for communecter.org
+    Serial.print(WEB[2]);
+    Serial.println(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC ADDRESS
+    Serial.print(WEB[3]);
+    Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL)); //Apikey
+    Serial.print(WEB[4]);
+    Serial.println(FirmWare); //Firmware version
+    Serial.print(WEB[5]);
+    Serial.println();
+  }
+#endif
+
+  //if (_base.findInResponse(WEB200OK, 2000)) return true;
+  //return false;
   return true;
 }
 
 
-void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *time, boolean instant) {
+void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *time, boolean instant)
+{
   *wait_moment = true;
-  if (base__.checkRTC()) base__.RTCtime(time);
+  if (_base.checkRTC()) _base.RTCtime(time);
   char tmpTime[19];
   strncpy(tmpTime, time, 20);
-
-  uint16_t updates = (base__.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - base__.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
-  uint16_t NumUpdates = base__.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
-
-boolean wificonnected=false;
-for(byte j=0;j<nb_host;j++){
-
-  if (updates >= (NumUpdates - 1) || instant)
-  {
-    if (sleep && j==0)
-    {
+  uint16_t updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
+  uint16_t NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
+  Serial.flush();
+  Serial.print(F("Updates: "));
+  Serial.println(updates);
+  if (updates >= (NumUpdates - 1) || instant) {
+    if (sleep) {
 #if debugEnabled
-      if (!ambient__.debug_state()) Serial.println(F("SCK Waking up..."));
+      if (_base.getDebugState()) {
+        Serial.println(F("SCK Waking up..."));
+      }
 #endif
       digitalWrite(AWAKE, HIGH);
     }
-    if (!wificonnected) wificonnected = base__.connect();  //Wifi connect
-    if (wificonnected)
-    {
+    if (_base.connect()) {
+      //Wifi connect
 #if debugEnabled
-      if (!ambient__.debug_state()) Serial.println(F("SCK Connected to Wi-Fi!"));
+      if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
 #endif
-      if (update(value, time)) //Update time and nets
-      {
-#if debugEnabled
-        if (!ambient__.debug_state())
-        {
-          Serial.print(F("updates = "));
-          Serial.println(updates + 1);
-        }
-#endif
+      if (update(value, time)) {
+        //Update time and nets
 
-        int num_post = updates;
-        int cycles = cycles = updates / POST_MAX;;
-        if (updates > POST_MAX)
-        {
-          for (int i = 0; i < cycles; i++)
-          {
-            connect(j);
-            json_update(POST_MAX, value, tmpTime, false);
+        // POST DATA
+        boolean connection_failed[HOSTS];
+        for (byte j = 0 ; j < HOSTS /*&& !connection_failed*/; j++) {
+          // post data to each host
+          connection_failed[j] = false;
+          updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
+#if debugEnabled && debugServer
+          if (_base.getDebugState()) {
+            Serial.print(HOSTADDR[j]);
+            Serial.print(F(" : updates = "));
+            Serial.println(updates + 1);
           }
-          num_post = updates - cycles * POST_MAX;
+#endif
+          int num_post = updates;
+          int cycles = updates / POST_MAX;
+          if (updates > POST_MAX) {
+            for (int i = 0; i < cycles; i++) {
+              if (connect(j)) json_update(POST_MAX, j, value, tmpTime, false);
+              else {
+                connection_failed[j] = true;
+                break; //skip all transmission
+              }
+            }
+            num_post = updates - cycles * POST_MAX;
+          }
+          if (connect(j) && !connection_failed[j]) json_update(num_post, j, value, tmpTime, true);
+          else connection_failed[j] = true;          
+          if (!connection_failed[j]) {
+#if debugEnabled
+            if (_base.getDebugState()) {
+              Serial.print(HOSTADDR[j]);
+              Serial.println(F(" : Posted to Server!"));
+            }
+#endif
+          }
+          else {
+#if debugEnabled
+            if (_base.getDebugState()) {
+              Serial.print(HOSTADDR[j]);
+              Serial.println(F(" : NOT Posted to Server!"));
+            }
+#endif
+          }
         }
-        connect(j);
-        json_update(num_post, value, tmpTime, true);
+        boolean data_stored = false;
+        for (byte j = 0 ; j < HOSTS; j++) {
+          if (connection_failed[j]) {
+            if (_base.checkRTC()) _base.RTCtime(time);
+            else time = "#";
+            if (!data_stored) {
+              addFIFO(value, time);
+              data_stored = true;
 #if debugEnabled
-        if (!ambient__.debug_state()){ Serial.print(F("Posted to Server host : "));Serial.println(j);}
+              if (_base.getDebugState()) {
+                Serial.println(F("Data saved in memory"));
+              }
+#endif
+            }
+          }
+          else if (data_stored) {
+            _base.writeData( EE_ADDR_NUMBER_READ_MEASURE + (j * 4), _base.readData(EE_ADDR_NUMBER_READ_MEASURE + (j * 4), INTERNAL) + SENSORS * 4 + TIME_BUFFER_SIZE, INTERNAL);
+          }
+        }
+      }
+#if debugEnabled
+      else if (_base.getDebugState()) {
+        Serial.println(F("Error updating time Server..!"));
+      }
 #endif
 
-      }
-      else
-      {
 #if debugEnabled
-        if (!ambient__.debug_state())
-        {   Serial.println(F("Error updating time Server..!"));   }
+      if (_base.getDebugState()) Serial.println(F("Old connection active. Closing..."));
 #endif
-      }
-#if debugEnabled
-      if (!ambient__.debug_state()) Serial.println(F("Old connection active. Closing..."));
-#endif
-      if(wificonnected && j>=(nb_host-1)) { base__.close(); wificonnected=false; }
+      _base.close();
     }
-    else //No connect
-    {
-      if (base__.checkRTC()) base__.RTCtime(time);
+    else {
+      //No connect
+      if (_base.checkRTC()) _base.RTCtime(time);
       else time = "#";
-
-      if (j==0) addFIFO(value, time);
+      addFIFO(value, time);
 #if debugEnabled
-      if (!ambient__.debug_state()) {
-        Serial.println(F("Error in connection! Data saved in memory"));
+      if (_base.getDebugState()) {
+        Serial.print(F("Error in connection!!"));
+        Serial.println(F(" Data saved in memory"));
         Serial.print(F("Pending updates: "));
         Serial.println(updates + 1);
       }
 #endif
     }
-    if (sleep)
-    {
-      base__.sleep();
+    if (sleep) {
+      _base.sleep();
 #if debugEnabled
-      if (!ambient__.debug_state())
-      {
-        Serial.println(F("SCK Sleeping"));
-      }
+      if (_base.getDebugState()) Serial.println(F("SCK Sleeping"));
 #endif
       digitalWrite(AWAKE, LOW);
     }
   }
-  else
-  {
-    if (base__.checkRTC()) base__.RTCtime(time);
+  else {
+    if (_base.checkRTC()) _base.RTCtime(time);
     else time = "#";
-    if (j==0) addFIFO(value, time);
+    addFIFO(value, time);
 #if debugEnabled
-    if (!ambient__.debug_state()) Serial.println(F("Saved in memory!!"));
+    if (_base.getDebugState()) Serial.println(F("Saved in memory!!"));
 #endif
   }
-}
   *wait_moment = false;
 }
 
