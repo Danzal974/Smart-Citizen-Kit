@@ -244,7 +244,7 @@ static char buffer_int[buffer_length2];
 #define HOSTS 2
 static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
 
-static char* ENDPTHTTP[HOSTS] = {"/add","/communecter/element/save"};  //"/add","/ph/communecter/element/save"
+static char* ENDPTHTTP[HOSTS] = {"/add","/co2/element/save"};  //"/add","/ph/communecter/element/save"
 
 static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
@@ -322,5 +322,8 @@ static char* UNITS[9] = {
   " mV",
   "",
 };
+
+/* char to print  */
+const char* const MSGCONST[] PROGMEM= {" " , "|" , "," , "***" , "RTC1" , "RTC0" , "WFI0" , "and pass:" , "WFI1" , "SMEM" , "PtoS" ,"Updates:"};
 
 #endif

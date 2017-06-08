@@ -122,9 +122,9 @@ void SCKServer::json_update(uint16_t updates, byte host, long *value, char *time
   for (int i = 0; i < updates; i++) {
     readFIFO(host);
     if ((i < (updates - 1)) || (isMultipart)) {
-      Serial1.print(F(","));
+      Serial1.print(MSGCONST[2]);
 #if debugServer
-      Serial.print(F(","));
+      Serial.print(MSGCONST[2]);
 #endif
     }
   }
@@ -323,7 +323,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
   uint16_t updates = (_base.readData(EE_ADDR_NUMBER_WRITE_MEASURE, INTERNAL) - _base.readData(EE_ADDR_NUMBER_READ_MEASURE, INTERNAL)) / ((SENSORS) * 4 + TIME_BUFFER_SIZE);
   uint16_t NumUpdates = _base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL); // Number of readings before batch update
   Serial.flush();
-  Serial.print(F("Updates: "));
+  Serial.print(MSGCONST[11]);
   Serial.println(updates);
   if (updates >= (NumUpdates - 1) || instant) {
     if (sleep) {
@@ -337,7 +337,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
     if (_base.connect()) {
       //Wifi connect
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
+      if (_base.getDebugState()) Serial.println(MSGCONST[8]);
 #endif
       if (update(value, time)) {
         //Update time and nets
@@ -373,7 +373,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
-              Serial.println(F(" : Posted to Server!"));
+              Serial.print(MSGCONST[0]); Serial.println(MSGCONST[10]);
             }
 #endif
           }
@@ -381,7 +381,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
-              Serial.println(F(" : NOT Posted to Server!"));
+              Serial.print(MSGCONST[0]); Serial.println(F("NOT")); Serial.println(MSGCONST[10]);
             }
 #endif
           }
@@ -396,7 +396,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
               data_stored = true;
 #if debugEnabled
               if (_base.getDebugState()) {
-                Serial.println(F("Data saved in memory"));
+                Serial.println(MSGCONST[9]);
               }
 #endif
             }
@@ -408,12 +408,12 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
       }
 #if debugEnabled
       else if (_base.getDebugState()) {
-        Serial.println(F("Error updating time Server..!"));
+        Serial.println(F("Err up time Server!"));
       }
 #endif
 
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("Old connection active. Closing..."));
+      if (_base.getDebugState()) Serial.println(F("Closing old CO.."));
 #endif
       _base.close();
     }
@@ -424,9 +424,9 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
       addFIFO(value, time);
 #if debugEnabled
       if (_base.getDebugState()) {
-        Serial.print(F("Error in connection!!"));
-        Serial.println(F(" Data saved in memory"));
-        Serial.print(F("Pending updates: "));
+        Serial.print(F("Err in CO!"));
+        Serial.println(MSGCONST[9]);
+        Serial.print(F("Pending updates:"));
         Serial.println(updates + 1);
       }
 #endif
@@ -444,7 +444,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
     else time = "#";
     addFIFO(value, time);
 #if debugEnabled
-    if (_base.getDebugState()) Serial.println(F("Saved in memory!!"));
+    if (_base.getDebugState()) Serial.println(MSGCONST[9]);
 #endif
   }
   *wait_moment = false;

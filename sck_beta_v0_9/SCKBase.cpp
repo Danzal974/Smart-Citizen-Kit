@@ -418,30 +418,7 @@ uint16_t SCKBase::getPanel(float Vref)
 #endif
   return value;
 }
-/*
-  const uint16_t batTable[] = {
-  3078, 3364, 3468, 3540, 3600,
-  3641, 3682, 3701, 3710, 3716,
-  3716, 3716, 3720, 3714, 3720,
-  3725, 3732, 3742, 3739, 3744,
-  3744, 3754, 3760, 3762, 3770,
-  3768, 3774, 3774, 3774, 3779,
-  3784, 3790, 3788, 3794, 3798,
-  3798, 3804, 3809, 3809, 3812,
-  3817, 3817, 3822, 3823, 3828,
-  3828, 3828, 3833, 3838, 3838,
-  3842, 3847, 3852, 3859, 3858,
-  3864, 3862, 3869, 3877, 3877,
-  3883, 3888, 3894, 3898, 3902,
-  3906, 3912, 3923, 3926, 3936,
-  3942, 3946, 3960, 3972, 3979,
-  3982, 3991, 3997, 4002, 4002,
-  4012, 4018, 4028, 4043, 4057,
-  4074, 4084, 4094, 4098, 4098,
-  4109, 4115, 4123, 4134, 4142,
-  4153, 4158, 4170, 4180, 4188
-  };
-*/
+
 uint16_t SCKBase::getBattery(float Vref)
 {
   uint16_t temp = average(BAT);
@@ -451,18 +428,13 @@ uint16_t SCKBase::getBattery(float Vref)
 #else
   float voltage = Vref * temp / 1023.;
 #endif
-  uint16_t percent = map(voltage, VAL_MIN_BATTERY, VAL_MAX_BATTERY, 0, 100) * 10;
-  if (percent > 1000) percent = 1000;
-  else if (percent < 10) percent = 10;
+
 #if debugBase
   Serial.print("Vbat: ");
   Serial.print(voltage);
   Serial.print(" mV, ");
-  Serial.print("Battery level: ");
-  Serial.print(percent / 10);
-  Serial.println(" %");
 #endif
-  return percent;
+  return voltage;
 }
 
 boolean SCKBase::findInResponse(const char *toMatch,  unsigned int timeOut = 1000)

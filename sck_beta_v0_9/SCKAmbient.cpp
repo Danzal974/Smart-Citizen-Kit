@@ -117,6 +117,7 @@ uint32_t timetransmit = 0;
 uint32_t timeMICS = 0;
 boolean RTCupdatedSinceBoot = false;
 
+
 void SCKAmbient::ini()
 {
   _base.setDebugState(false);
@@ -130,35 +131,35 @@ void SCKAmbient::ini()
   else sleep = true;
   if (_base.connect()) {
 #if debugEnabled
-    if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
+    if (_base.getDebugState()) Serial.println(MSGCONST[8]);
 #endif
 #if autoUpdateWiFly
     int report = _base.checkWiFly();
 #if debugEnabled
     if (_base.getDebugState()) {
-      if (report == 1) Serial.println(F("Wifly Updated."));
-      else if (report == 2) Serial.println(F("Update Fail."));
-      else if (report == 0) Serial.println(F("WiFly up to date."));
-      else if (report == -1) Serial.println(F("Error reading the wifi version."));
+      if (report == 1) Serial.println(F("Wifly Upd"));
+      else if (report == 2) Serial.println(F("Upd Fail"));
+      else if (report == 0) Serial.println(F("WiFly upToDate"));
+      else if (report == -1) Serial.println(F("Err reading the wifi version"));
     }
 #endif
 #endif
     if (_server->RTCupdate(time)) {
       RTCupdatedSinceBoot = true;
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("RTC Updated!!"));
+      if (_base.getDebugState()) Serial.println(MSGCONST[4]);
 #endif
     } else {
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
+      if (_base.getDebugState()) Serial.println(MSGCONST[5]);
 #endif
     }
   } else {
 #if debugEnabled
     if (_base.getDebugState()) {
-      Serial.print(F("Wifi conection failed!!! Using ssid: "));
+      Serial.print(MSGCONST[6]);
       printNetWorks(DEFAULT_ADDR_SSID, false);
-      Serial.print(F(" and pass: "));
+      Serial.print(MSGCONST[7]);
       printNetWorks(DEFAULT_ADDR_PASS, false);
       Serial.println("");
     }
@@ -325,12 +326,12 @@ float SCKAmbient::readRs(byte device)
   if (VL > VMICS) VL = VMICS;
   float Rs = ((VMICS - VL) / VL) * RL; //Ohm
 #if debugAmbient
-  if (device == MICS_5525) Serial.print("MICS5525 Rs: ");
-  else Serial.print("MICS2710 Rs: ");
+  if (device == MICS_5525) Serial.print("MICS5525 Rs:");Serial.print(MSGCONST[0]);
+  else Serial.print("MICS2710 Rs:"); Serial.print(MSGCONST[0]);
   Serial.print(VL);
-  Serial.print(" mV, ");
-  Serial.print(Rs);
-  Serial.println(" Ohm");
+  Serial.print(MSGCONST[0]); Serial.print("mV"); Serial.print(MSGCONST[2]);Serial.print(MSGCONST[0]); //  Serial.print(" mV, ");
+  Serial.print(Rs); Serial.print(MSGCONST[0]);
+  Serial.println("Ohm");
 #endif
   return Rs;
 }
@@ -411,12 +412,12 @@ void SCKAmbient::getSHT21()
   lastTemperature = readSHT21(0xE3);  // RAW DATA for calibration in platform
   lastHumidity    = readSHT21(0xE5);  // RAW DATA for calibration in platform
 #if debugAmbient
-  Serial.print("SHT21:  ");
-  Serial.print("Temperature: ");
-  Serial.print(lastTemperature / 10.);
-  Serial.print(" C, Humidity: ");
-  Serial.print(lastHumidity / 10.);
-  Serial.println(" %");
+  Serial.print("SHT21:");Serial.print(MSGCONST[0]);Serial.print(MSGCONST[0]);
+  Serial.print("Temperature:");Serial.print(MSGCONST[0]);
+  Serial.print(lastTemperature / 10.);Serial.print(MSGCONST[0]);
+  Serial.print("C, Humidity:");Serial.print(MSGCONST[0]);
+  Serial.print(lastHumidity / 10.);Serial.print(MSGCONST[0]);
+  Serial.println("%");
 #endif
 }
 
@@ -759,13 +760,13 @@ void SCKAmbient::execute(boolean instant)
   if (!RTCupdatedSinceBoot && !_base.RTCisValid(time)) {
     digitalWrite(AWAKE, HIGH);
 #if debugEnabled
-    if (_base.getDebugState()) Serial.println(F("RTC not updated!!!"));
-    if (_base.getDebugState()) Serial.println(F("With no valid time it's useless to take readings!!"));
+    if (_base.getDebugState()) Serial.println(F("RTCnotUpd"));
+    if (_base.getDebugState()) Serial.println(F("No valid time : No readings!"));
     if (_base.getDebugState()) Serial.println(F("Trying to get valid time..."));
 #endif
     if (_base.connect()) {
 #if debugEnabled
-      if (_base.getDebugState()) Serial.println(F("SCK Connected to WiFi!!"));
+      if (_base.getDebugState()) Serial.println(MSGCONST[8]);
 #endif
       if (_server->RTCupdate(time)) {
         RTCupdatedSinceBoot = true;
@@ -774,21 +775,21 @@ void SCKAmbient::execute(boolean instant)
           digitalWrite(AWAKE, LOW);
         }
 #if debugEnabled
-        if (_base.getDebugState()) Serial.println(F("RTC Updated!!"));
+        if (_base.getDebugState()) Serial.println(MSGCONST[4]);
 #endif
       }
       else {
 #if debugEnabled
-        if (_base.getDebugState()) Serial.println(F("RTC Update Failed!!"));
+        if (_base.getDebugState()) Serial.println(MSGCONST[5]);
 #endif
       }
     }
     else {
 #if debugEnabled
       if (_base.getDebugState()) {
-        Serial.print(F("Wifi conection failed!!! Using ssid: "));
+        Serial.print(MSGCONST[6]);Serial.print(MSGCONST[0]);
         printNetWorks(DEFAULT_ADDR_SSID, false);
-        Serial.print(F(" and pass: "));
+        Serial.print(MSGCONST[0]);Serial.print(MSGCONST[7]);Serial.print(MSGCONST[0]);
         printNetWorks(DEFAULT_ADDR_PASS, false);
         Serial.println("");
         Serial.println(F("Try restarting your kit!!"));
@@ -815,7 +816,7 @@ void SCKAmbient::execute(boolean instant)
 void SCKAmbient::txDebug()
 {
   if (!_base.getDebugState()) {
-    Serial.println(F("*******************"));
+    Serial.println(F("****")); // Serial.println(F("*******************"));
     float dec = 0;
     for (int i = 0; i < 9; i++) {
 #if F_CPU == 8000000
@@ -838,7 +839,7 @@ void SCKAmbient::txDebug()
     }
     Serial.print(SENSOR[9]);
     Serial.println(time);
-    Serial.println(F("*******************"));
+    Serial.println(F("****")); // Serial.println(F("*******************"));
   }
 }
 
@@ -967,25 +968,26 @@ void SCKAmbient::serialRequests()
         else if (_base.checkText("number updates", buffer_int)) Serial.println(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
         else if (_base.checkText("apikey", buffer_int)) Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
         else if (_base.checkText("all", buffer_int)) {
-          Serial.print(F("|"));
+          
+          Serial.print("|");
           Serial.print(FirmWare);
-          Serial.print(F("|"));
+          Serial.print("|");
           Serial.print(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC
-          Serial.print(F("|"));
+          Serial.print("|");
           printNetWorks(DEFAULT_ADDR_SSID, false);
-          Serial.print(F(","));
+          Serial.print(",");
           printNetWorks(DEFAULT_ADDR_PASS, false);
-          Serial.print(F(","));
+          Serial.print(",");
           printNetWorks(DEFAULT_ADDR_ANTENNA, false);
-          Serial.print(F(","));
+          Serial.print(",");
           printNetWorks(DEFAULT_ADDR_AUTH, false);
-          Serial.print(F("|"));
+          Serial.print("|");
           Serial.print(NETWORKS);
-          Serial.print(F("|"));
+          Serial.print("|");
           Serial.print(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
-          Serial.print(F("|"));
+          Serial.print("|");
           Serial.print(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
-          Serial.println(F("|"));
+          Serial.print("|");
         }
       }
       else if (_base.checkText("post data\r", buffer_int)) {
