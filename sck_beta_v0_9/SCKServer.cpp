@@ -13,13 +13,15 @@ SCKServer::SCKServer(SCKBase& base)
   _base = base;
 }
 
+#define numbers_retry 5
+
 boolean SCKServer::time(char *time_)
 {
   boolean ok = false;
   uint8_t count = 0;
   byte retry = 0;
   byte webtime = 0; //0 : smartcitizen ; 1 : communecter
-  while ((retry < 6) && (!ok)) {
+  while ((retry < numbers_retry) && (!ok)) {
     webtime = retry % HOSTS;
     retry++;
 
@@ -32,8 +34,8 @@ boolean SCKServer::time(char *time_)
         Serial1.print(WEB[0]);
         Serial1.print(HOSTADDR[webtime]);
         //Serial1.print(" ");
-        Serial1.print(WEB[1]);
-        Serial1.println(F(""));
+        Serial1.println(WEB[1]);
+        //Serial1.println(F("\r\n"));
 #if debugServer
         Serial.print(F("GET "));
         Serial.print(TIMEENDPOINT[webtime]);
@@ -102,7 +104,7 @@ boolean SCKServer::RTCupdate(char *time_)
   byte retry = 0;
   if (_base.checkRTC()) {
     if (time(time_)) {
-      while (retry < 5) {
+      while (retry < numbers_retry) {
         retry++;
         if (_base.RTCadjust(time_)) {
           return true;
@@ -122,16 +124,16 @@ void SCKServer::json_update(uint16_t updates, byte host, long *value, char *time
   for (int i = 0; i < updates; i++) {
     readFIFO(host);
     if ((i < (updates - 1)) || (isMultipart)) {
-      Serial1.print(MSGCONST[2]);
+      Serial1.print(F(","));
 #if debugServer
-      Serial.print(MSGCONST[2]);
+      Serial.print(F(","));
 #endif
     }
   }
 
   if (isMultipart) {
     byte i;
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < SENSORS; i++) {
       Serial1.print(SERVER[i]);
       Serial1.print(value[i]);
     }
@@ -142,7 +144,7 @@ void SCKServer::json_update(uint16_t updates, byte host, long *value, char *time
     Serial1.println();
 
 #if debugServer
-    for (i = 0; i < 9; i++) {
+    for (i = 0; i < SENSORS; i++) {
       Serial.print(SERVER[i]);
       Serial.print(value[i]);
     }
@@ -239,7 +241,7 @@ void SCKServer::readFIFO(byte host)
 
 }
 
-#define numbers_retry 5
+
 
 boolean SCKServer::update(long *value, char *time_)
 {
@@ -373,7 +375,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
-              Serial.print(MSGCONST[0]); Serial.println(MSGCONST[10]);
+              Serial.println(MSGCONST[10]);
             }
 #endif
           }
@@ -381,7 +383,7 @@ void SCKServer::send(boolean sleep, boolean *wait_moment, long *value, char *tim
 #if debugEnabled
             if (_base.getDebugState()) {
               Serial.print(HOSTADDR[j]);
-              Serial.print(MSGCONST[0]); Serial.println(F("NOT")); Serial.println(MSGCONST[10]);
+              Serial.println(F(" NOT")); Serial.println(MSGCONST[10]);
             }
 #endif
           }

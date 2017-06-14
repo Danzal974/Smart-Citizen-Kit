@@ -18,7 +18,7 @@
 
 void SCKBase::begin()
 {
-  _debugON = true;
+  setDebugState(true);
   Wire.begin();
   TWBR = ((F_CPU / TWI_FREQ) - 16) / 2;
   Serial.begin(115200);
@@ -176,7 +176,7 @@ float SCKBase::readCharge()
   float resistor = kr * readMCP(MCP3, 0x00) / 1000;
   float current = 1000. / (2 + ((resistor * 10) / (resistor + 10)));
 #if debugBase
-  Serial.print("Resistor : ");
+  Serial.print("R : ");
   Serial.print(resistor);
   Serial.print(" kOhm, ");
   Serial.print("Current : ");

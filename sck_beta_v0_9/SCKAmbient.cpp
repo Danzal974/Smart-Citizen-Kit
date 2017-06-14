@@ -33,6 +33,7 @@ TemperatureDecoupler decoupler; // Compensate the bat .charger generated heat af
 long value[SENSORS];
 char time[TIME_BUFFER_SIZE];
 boolean wait_moment;
+//boolean debugON = true;
 
 #if F_CPU == 8000000
 float    Vcc = 3300.; //mV
@@ -108,10 +109,10 @@ void SCKAmbient::begin() {
 
 boolean terminal_mode = false;
 boolean usb_mode      = false;
-byte      sensor_mode    = NORMAL;
+byte      sensor_mode  = NORMAL;
 uint32_t  TimeUpdate   = 0;  // Sensor Readings time interval in sec.
 uint32_t  NumUpdates   = 0;  // Min. number of sensor readings before publishing
-uint32_t  nets           = 0;
+uint32_t  nets         = 0;
 boolean sleep = true;
 uint32_t timetransmit = 0;
 uint32_t timeMICS = 0;
@@ -130,13 +131,11 @@ void SCKAmbient::ini()
   if (TimeUpdate * NumUpdates < 60) sleep = false;
   else sleep = true;
   if (_base.connect()) {
-#if debugEnabled
-    if (_base.getDebugState()) Serial.println(MSGCONST[8]);
-#endif
 #if autoUpdateWiFly
     int report = _base.checkWiFly();
 #if debugEnabled
     if (_base.getDebugState()) {
+      Serial.println(MSGCONST[8]);
       if (report == 1) Serial.println(F("Wifly Upd"));
       else if (report == 2) Serial.println(F("Upd Fail"));
       else if (report == 0) Serial.println(F("WiFly upToDate"));
@@ -326,11 +325,11 @@ float SCKAmbient::readRs(byte device)
   if (VL > VMICS) VL = VMICS;
   float Rs = ((VMICS - VL) / VL) * RL; //Ohm
 #if debugAmbient
-  if (device == MICS_5525) Serial.print("MICS5525 Rs:");Serial.print(MSGCONST[0]);
-  else Serial.print("MICS2710 Rs:"); Serial.print(MSGCONST[0]);
+  if (device == MICS_5525) Serial.print("MICS5525 Rs:");
+  else Serial.print("MICS2710 Rs:");
   Serial.print(VL);
-  Serial.print(MSGCONST[0]); Serial.print("mV"); Serial.print(MSGCONST[2]);Serial.print(MSGCONST[0]); //  Serial.print(" mV, ");
-  Serial.print(Rs); Serial.print(MSGCONST[0]);
+  Serial.print(" mV,"); //  Serial.print(" mV, ");
+  Serial.print(Rs); 
   Serial.println("Ohm");
 #endif
   return Rs;
@@ -412,12 +411,12 @@ void SCKAmbient::getSHT21()
   lastTemperature = readSHT21(0xE3);  // RAW DATA for calibration in platform
   lastHumidity    = readSHT21(0xE5);  // RAW DATA for calibration in platform
 #if debugAmbient
-  Serial.print("SHT21:");Serial.print(MSGCONST[0]);Serial.print(MSGCONST[0]);
-  Serial.print("Temperature:");Serial.print(MSGCONST[0]);
-  Serial.print(lastTemperature / 10.);Serial.print(MSGCONST[0]);
-  Serial.print("C, Humidity:");Serial.print(MSGCONST[0]);
-  Serial.print(lastHumidity / 10.);Serial.print(MSGCONST[0]);
-  Serial.println("%");
+  Serial.print("SHT21: ");
+  Serial.print("Temperature: ");
+  Serial.print(lastTemperature / 10.);
+  Serial.print(" C, Humidity:");
+  Serial.print(lastHumidity / 10.);
+  Serial.println(" %");
 #endif
 }
 
@@ -635,6 +634,13 @@ uint16_t SCKAmbient::getLight()
 #endif
 }
 
+float SCKAmbient::readExtSensor(){
+ //  Wire.beginTransmission(0x35);
+return 7.;   
+}
+
+
+
 unsigned int SCKAmbient::getNoise()
 {
 #if F_CPU == 8000000
@@ -729,8 +735,8 @@ void SCKAmbient::updateSensors(byte mode)
     value[1] = 0; // %
   }
   value[2] = getLight(); //mV
-  value[3] = _base.getBattery(Vcc); //%
-  value[4] = _base.getPanel(Vcc);  // %
+  value[3] = _base.getBattery(Vcc); //mV
+  value[4] = _base.getPanel(Vcc);  // mV
   value[7] = getNoise(); //mV
   if (mode == NOWIFI) {
     value[8] = 0;  //Wifi Nets
@@ -740,6 +746,7 @@ void SCKAmbient::updateSensors(byte mode)
     value[8] = _base.scan();  //Wifi Nets
     _base.RTCtime(time);
   }
+  value[9]= readExtSensor();
 }
 /*
   boolean SCKAmbient::debug_state()
@@ -760,9 +767,11 @@ void SCKAmbient::execute(boolean instant)
   if (!RTCupdatedSinceBoot && !_base.RTCisValid(time)) {
     digitalWrite(AWAKE, HIGH);
 #if debugEnabled
-    if (_base.getDebugState()) Serial.println(F("RTCnotUpd"));
-    if (_base.getDebugState()) Serial.println(F("No valid time : No readings!"));
-    if (_base.getDebugState()) Serial.println(F("Trying to get valid time..."));
+    if (_base.getDebugState()) { 
+      Serial.println(F("RTC notUpd")); 
+      Serial.println(F("No valid time : No readings!"));
+      Serial.println(F("Trying to get valid time..."));
+      }
 #endif
     if (_base.connect()) {
 #if debugEnabled
@@ -787,12 +796,12 @@ void SCKAmbient::execute(boolean instant)
     else {
 #if debugEnabled
       if (_base.getDebugState()) {
-        Serial.print(MSGCONST[6]);Serial.print(MSGCONST[0]);
+        Serial.print(MSGCONST[6]);Serial.print(F(" "));
         printNetWorks(DEFAULT_ADDR_SSID, false);
-        Serial.print(MSGCONST[0]);Serial.print(MSGCONST[7]);Serial.print(MSGCONST[0]);
+        Serial.print(F(" "));Serial.print(MSGCONST[7]);
         printNetWorks(DEFAULT_ADDR_PASS, false);
         Serial.println("");
-        Serial.println(F("Try restarting your kit!!"));
+        Serial.println(F("Restart your kit!"));
       }
 #endif
     }
@@ -818,7 +827,7 @@ void SCKAmbient::txDebug()
   if (!_base.getDebugState()) {
     Serial.println(F("****")); // Serial.println(F("*******************"));
     float dec = 0;
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < SENSORS; i++) {
 #if F_CPU == 8000000
       if (i < 2) dec = 1;
       else if (i < 4) dec = 10;
@@ -837,7 +846,7 @@ void SCKAmbient::txDebug()
       else Serial.print((unsigned int)(value[i] / dec));
       Serial.println(UNITS[i]);
     }
-    Serial.print(SENSOR[9]);
+    Serial.print(SENSOR[10]);
     Serial.println(time);
     Serial.println(F("****")); // Serial.println(F("*******************"));
   }
@@ -969,7 +978,6 @@ void SCKAmbient::serialRequests()
         else if (_base.checkText("apikey", buffer_int)) Serial.println(_base.readData(EE_ADDR_APIKEY, 0, INTERNAL));
         else if (_base.checkText("all", buffer_int)) {
           
-          Serial.print("|");
           Serial.print(FirmWare);
           Serial.print("|");
           Serial.print(_base.readData(EE_ADDR_MAC, 0, INTERNAL)); //MAC
@@ -986,8 +994,7 @@ void SCKAmbient::serialRequests()
           Serial.print("|");
           Serial.print(_base.readData(EE_ADDR_TIME_UPDATE, INTERNAL));
           Serial.print("|");
-          Serial.print(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL));
-          Serial.print("|");
+          Serial.print(_base.readData(EE_ADDR_NUMBER_UPDATES, INTERNAL)); 
         }
       }
       else if (_base.checkText("post data\r", buffer_int)) {

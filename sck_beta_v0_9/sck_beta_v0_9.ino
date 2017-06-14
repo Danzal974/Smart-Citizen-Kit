@@ -3,7 +3,7 @@
   Smart Citizen Kit
 
   Ambient Board Beta Firmware v. 0.9.5-A
-  Modif par Danzal974 le 23/01/2017
+  From branch engee974-fablab.re -> Modified by Danzal974 le 09/06/2017
   http://smartcitizen.me/
 
 

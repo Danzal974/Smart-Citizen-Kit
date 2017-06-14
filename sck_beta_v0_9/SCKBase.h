@@ -84,8 +84,9 @@ class SCKBase {
     void timer1SetPeriod(long microseconds);
     void timer1Initialize();
     void timer1Stop();
-
+    
   private:
-    boolean _debugON;
+  boolean _debugON;
+   
 };
 #endif

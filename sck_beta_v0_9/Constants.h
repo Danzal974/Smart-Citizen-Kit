@@ -22,7 +22,7 @@
 #define debugAmbient      false
 
 #define TIME_BUFFER_SIZE      20
-#define SENSORS               9     // Numbers of sensors in the board
+#define SENSORS               10     // Numbers of sensors in the board
 #define EXTERNAL_EEPROM_SIZE  32000 // Number of octets
 
 #if F_CPU == 8000000
@@ -55,20 +55,16 @@
 
 */
 
-#define NETWORKS 0
+#define NETWORKS 1
 #if (NETWORKS > 0)
 static char* mySSID[NETWORKS]      = {
-  "SSID1"        , "SSID2"
-};
+  "SSID1"   };//     , "SSID2" };
 static char* myPassword[NETWORKS]  = {
-  "PASS1"      , "PASS2"
-};
+  "PASS1"   };   //    , "PASS2" };
 static char* wifiEncript[NETWORKS] = {
-  WPA2         , WPA2
-};
+  WPA2     }; // , WPA2 };
 static char* antennaExt[NETWORKS]  = {
-  INT_ANT      , INT_ANT
-};
+  INT_ANT   };//   , INT_ANT };
 #endif
 
 #define TWI_FREQ 400000L //Frecuencia bus I2C
@@ -122,6 +118,7 @@ static char* antennaExt[NETWORKS]  = {
 */
 #define RTC_ADDRESS          0x68    // Direction of the RTC
 #define E2PROM               0x50    // Direction of the EEPROM
+#define EXTSENSOR            0x35    //Direction of extern sensor
 
 #if F_CPU == 8000000
 #define MCP1               0x2E    // Direction of the mcp1 Potenciometers that control the MICS
@@ -242,22 +239,22 @@ static char buffer[buffer_length];
 static char buffer_int[buffer_length2];
 
 #define HOSTS 2
-static char* HOSTADDR[HOSTS] = {"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
+static char* HOSTADDR[HOSTS] = {"192.168.1.5"};  //{"data.smartcitizen.me","dev.communecter.org"}; //"data.smartcitizen.me","192.168.1..."
 
-static char* ENDPTHTTP[HOSTS] = {"/add","/co2/element/save"};  //"/add","/ph/communecter/element/save"
+static char* ENDPTHTTP[HOSTS] = {"/ph/co2/element/save"}; //{"/add","/co2/element/save"};  //"/add","/ph/communecter/element/save"
 
-static char* TIMEENDPOINT[HOSTS] = {"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
+static char* TIMEENDPOINT[HOSTS] = {"/ph/api/tool/datetime"}; //{"/datetime","/api/tool/datetime"}; //"/datetime", "/ph/api/tool/datetime"
 
 //The Authentification for communecter
 static char* AUTHPH = "Authorization: Basic ZGFuemFsRGV2OmNqZDFNMkluZm8= \n";
 
 // Basic Server Posts to the SmartCitizen Platform - EndPoint: http://data.smartcitizen.me/add
-static char* WEB[6] = {
 //  "data.smartcitizen.me",
 //  "PUT /add HTTP/1.1\n",
 //  "Host: data.smartcitizen.me \n",
-  " HTTP/1.1\nHost: ",
-  " \nUser-Agent: SmartCitizen \n",
+static char* WEB[6] = {
+  " HTTP/1.1\r\nHost: ",
+  "\r\nUser-Agent: SmartCitizen\r\n",
   "X-SmartCitizenMacADDR: ",
   "X-SmartCitizenApiKey: ",
   "X-SmartCitizenVersion: ",
@@ -275,7 +272,7 @@ static char* WEB[6] = {
 static char* WEB200OK = "HTTP/1.1 200 OK";
 
 // Data JSON structure
-static char* SERVER[11] = {
+static char* SERVER[12] = {
   "{\"temp\":\"",
   "\",\"hum\":\"",
   "\",\"light\":\"",
@@ -285,24 +282,26 @@ static char* SERVER[11] = {
   "\",\"no2\":\"",
   "\",\"noise\":\"",
   "\",\"nets\":\"",
+  "\",\"ph\":\"",
   "\",\"timestamp\":\"",
   "\"}"
 };
 
-static char* SENSOR[10] = {
-  "Temperature: ",
-  "Humidity: ",
+static char* SENSOR[11] = {
+  "Temp: ",
+  "Hum: ",
   "Light: ",
-  "Battery: ",
-  "Solar Panel: ",
-  "Carbon Monoxide: ",
-  "Nitrogen Dioxide: ",
+  "Bat: ",
+  "PV: ",
+  "CO: ",
+  "NO2: ",
   "Noise: ",
-  "Wifi Spots: ",
+  "Nets: ",
+  "PH: ",
   "UTC: "
 };
 
-static char* UNITS[9] = {
+static char* UNITS[10] = {
 #if F_CPU == 8000000
   " C RAW",
   " % RAW",
@@ -321,9 +320,10 @@ static char* UNITS[9] = {
   " kOhm",
   " mV",
   "",
+  "",
 };
 
-/* char to print  */
-const char* const MSGCONST[] PROGMEM= {" " , "|" , "," , "***" , "RTC1" , "RTC0" , "WFI0" , "and pass:" , "WFI1" , "SMEM" , "PtoS" ,"Updates:"};
+/* char to print                  0   1     2     3       4         5       6         7             8        9       10       11*/
+static char* const MSGCONST[] = {"" , "" , "" , "***" , "RTC1" , "RTC0" , "WFI0" , "and pass:" , "WFI1" , "SMEM" , "PtoS" ,"Updates:"};
 
 #endif
